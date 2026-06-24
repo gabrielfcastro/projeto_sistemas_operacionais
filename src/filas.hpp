@@ -17,16 +17,17 @@ class GerenciadorDeFilas {
 public:
     GerenciadorDeFilas() : total_de_processos(0) {}
 
-    void processo_a_ser_executado(BCP& processo){
+    void adicionar_processos_na_fila(BCP& processo){
         if (total_de_processos >= MAXIMO_DE_PROCESSOS){
             throw overflow_error("Capacidade máxima de processos atingida.");
         }
 
         processo.estado_atual = EstadoProcesso::PRONTO;
 
-        // Fila de Tempo Real são prioritárias (FIFO)
+        // 1 - Se for um processo de tempo real entra na fila prioritária
         if (processo.tipo == TipoProcesso::TEMPO_REAL) {
             fila_tempo_real.push(processo);
+        // 2 - Caso contrário entra na fila normal
         } else {
             int fila = determinar_fila_baseado_na_prioridade(processo.prioridade_dinamica);
             filas_de_usuario[fila].push(processo);
@@ -35,7 +36,7 @@ public:
         total_de_processos++;
     }
 
-    BCP proximo_processo_a_ser_executado() {
+    BCP proximo_processo_da_fila_a_ser_executado() {
         // 1 - Verifica a fila de processos em tempo real
         if (!fila_tempo_real.empty()){
             BCP processo_escolhido = fila_tempo_real.front();
@@ -44,11 +45,11 @@ public:
             processo_escolhido.estado_atual = EstadoProcesso::EXECUTANDO;
             return processo_escolhido;
         }
-
+        // 2 - Percorre todas as 3 filas
         for (int i = 0; i < QUANTIDADE_FILAS_USUARIO; i++){
-            // Garante que não tenho num processo na fila de processo em tempo real
+            // 2a) Garante que não tenho num processo na fila de processo em tempo real
             if (!filas_de_usuario[i].empty()){
-                // Pega o primeiro processo que está na fila de prioridade, seguindo a ordem 1,2 e 3
+                //2b) Pega o primeiro processo que está na fila de prioridade, seguindo a ordem 1,2 e 3
                 BCP processo_escolhido = filas_de_usuario[i].front();
                 filas_de_usuario[i].pop();
                 total_de_processos--;
@@ -69,7 +70,7 @@ public:
                 filas_de_usuario[nivel].pop();
                 proc.tempo_esperando++;
 
-                // 1 - Mudo a prioridade do meu processo e consequentemente a fila que ele vai estar
+                // 1 - Mudo a prioridade do meu processo e consequentemente a fila que ele vai estar, caso ele tenha
                 if (proc.tempo_esperando >= TEMPO_MAXIMO_DE_ESPERA && proc.prioridade_dinamica > 1){
                     proc.prioridade_dinamica--;
                     proc.tempo_esperando = 0;
