@@ -93,7 +93,7 @@ void test_parse_invalid_priority() {
     ASSERT_TRUE(threw);
 }
 
-// --- carregar_arquivo_processos ---
+// --- filtrar_e_extrair_processos ---
 
 void test_parse_file_two_processes() {
     // Exemplo direto da especificação (seção 2.1.3)
@@ -101,7 +101,7 @@ void test_parse_file_two_processes() {
         "2, 0, 3, 4, 0, 0, 0, 0\n"
         "8, 0, 2, 8, 0, 0, 0, 0\n";
 
-    auto procs = Leitor::carregar_arquivo_processos(content);
+    auto procs = Leitor::filtrar_e_extrair_processos(content);
 
     ASSERT_EQ(2, (int)procs.size());
 
@@ -125,7 +125,7 @@ void test_parse_file_ignores_blank_lines() {
         "8, 0, 2, 8, 0, 0, 0, 0\n"
         "\n";
 
-    auto procs = Leitor::carregar_arquivo_processos(content);
+    auto procs = Leitor::filtrar_e_extrair_processos(content);
     ASSERT_EQ(2, (int)procs.size());
     ASSERT_EQ(0, procs[0].id);
     ASSERT_EQ(1, procs[1].id);
@@ -137,7 +137,7 @@ void test_parse_file_pids_are_sequential() {
         "0, 2, 3, 2, 0, 0, 0, 0\n"
         "0, 3, 4, 2, 0, 0, 0, 0\n";
 
-    auto procs = Leitor::carregar_arquivo_processos(content);
+    auto procs = Leitor::filtrar_e_extrair_processos(content);
     ASSERT_EQ(3, (int)procs.size());
     ASSERT_EQ(0, procs[0].id);
     ASSERT_EQ(1, procs[1].id);

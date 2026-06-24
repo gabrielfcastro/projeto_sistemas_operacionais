@@ -118,7 +118,7 @@ namespace Leitor {
     }
 
     // Lê o arquivo e retorna um vetor de BCPs
-    inline vector<BCP> carregar_arquivo_processos(const string& arquivo_filtrado){
+    inline vector<BCP> filtrar_e_extrair_processos(const string& arquivo_filtrado){
         vector<BCP> lista_de_processos;
         stringstream arquivo_antes_de_ser_filtrado(arquivo_filtrado);
         string linha_atual;
