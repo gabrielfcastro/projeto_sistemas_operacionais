@@ -3,24 +3,26 @@
 #include <fstream>
 #include <sstream>
 
+using namespace std;
+
 // ============================================================
 // Testes do Despachante (despachante.hpp)
 // ============================================================
 
 // Helper: escreve um arquivo temporário com o conteúdo dado
-static void escrever_arquivo(const std::string& caminho, const std::string& conteudo) {
-    std::ofstream f(caminho);
+static void escrever_arquivo(const string& caminho, const string& conteudo) {
+    ofstream f(caminho);
     f << conteudo;
 }
 
 // Helper: redireciona stdout para uma string durante o bloco
 // (útil para capturar a saída do despachante)
-static std::string capturar_saida(std::function<void()> fn) {
-    std::streambuf* antigo = std::cout.rdbuf();
-    std::ostringstream oss;
-    std::cout.rdbuf(oss.rdbuf());
+static string capturar_saida(function<void()> fn) {
+    streambuf* antigo = cout.rdbuf();
+    ostringstream oss;
+    cout.rdbuf(oss.rdbuf());
     fn();
-    std::cout.rdbuf(antigo);
+    cout.rdbuf(antigo);
     return oss.str();
 }
 
@@ -60,7 +62,7 @@ void test_carregar_arquivo_ausente_lanca_excecao() {
     Despachante d;
     bool lancou = false;
     try { d.carregar_arquivos("/tmp/nao_existe.txt", "/tmp/nao_existe2.txt"); }
-    catch (const std::runtime_error&) { lancou = true; }
+    catch (const runtime_error&) { lancou = true; }
     ASSERT_TRUE(lancou);
 }
 
@@ -73,7 +75,7 @@ void test_carregar_falta_linha_paginas_lanca_excecao() {
     Despachante d;
     bool lancou = false;
     try { d.carregar_arquivos("/tmp/proc.txt", "/tmp/str.txt"); }
-    catch (const std::runtime_error&) { lancou = true; }
+    catch (const runtime_error&) { lancou = true; }
     ASSERT_TRUE(lancou);
 }
 
@@ -85,17 +87,17 @@ void test_formato_cabecalho_despachante() {
 
     Despachante d;
     d.carregar_arquivos("/tmp/proc.txt", "/tmp/str.txt");
-    std::string out = capturar_saida([&]{ d.executar(); });
+    string out = capturar_saida([&]{ d.executar(); });
 
-    ASSERT_TRUE(out.find("dispatcher =>")  != std::string::npos);
-    ASSERT_TRUE(out.find("PID: 0")         != std::string::npos);
-    ASSERT_TRUE(out.find("frames: 4")      != std::string::npos);
-    ASSERT_TRUE(out.find("priority: 1")    != std::string::npos);
-    ASSERT_TRUE(out.find("time: 2")        != std::string::npos);
-    ASSERT_TRUE(out.find("printers: 1")    != std::string::npos);
-    ASSERT_TRUE(out.find("scanners: 0")    != std::string::npos);
-    ASSERT_TRUE(out.find("modems: 1")      != std::string::npos);
-    ASSERT_TRUE(out.find("drives: 0")      != std::string::npos);
+    ASSERT_TRUE(out.find("dispatcher =>")  != string::npos);
+    ASSERT_TRUE(out.find("PID: 0")         != string::npos);
+    ASSERT_TRUE(out.find("frames: 4")      != string::npos);
+    ASSERT_TRUE(out.find("priority: 1")    != string::npos);
+    ASSERT_TRUE(out.find("time: 2")        != string::npos);
+    ASSERT_TRUE(out.find("printers: 1")    != string::npos);
+    ASSERT_TRUE(out.find("scanners: 0")    != string::npos);
+    ASSERT_TRUE(out.find("modems: 1")      != string::npos);
+    ASSERT_TRUE(out.find("drives: 0")      != string::npos);
 }
 
 void test_formato_saida_processo() {
@@ -104,14 +106,14 @@ void test_formato_saida_processo() {
 
     Despachante d;
     d.carregar_arquivos("/tmp/proc.txt", "/tmp/str.txt");
-    std::string out = capturar_saida([&]{ d.executar(); });
+    string out = capturar_saida([&]{ d.executar(); });
 
-    ASSERT_TRUE(out.find("process 0 =>")     != std::string::npos);
-    ASSERT_TRUE(out.find("P0 STARTED")       != std::string::npos);
-    ASSERT_TRUE(out.find("P0 instruction 1") != std::string::npos);
-    ASSERT_TRUE(out.find("P0 instruction 2") != std::string::npos);
-    ASSERT_TRUE(out.find("P0 instruction 3") != std::string::npos);
-    ASSERT_TRUE(out.find("P0 return SIGINT") != std::string::npos);
+    ASSERT_TRUE(out.find("process 0 =>")     != string::npos);
+    ASSERT_TRUE(out.find("P0 STARTED")       != string::npos);
+    ASSERT_TRUE(out.find("P0 instruction 1") != string::npos);
+    ASSERT_TRUE(out.find("P0 instruction 2") != string::npos);
+    ASSERT_TRUE(out.find("P0 instruction 3") != string::npos);
+    ASSERT_TRUE(out.find("P0 return SIGINT") != string::npos);
 }
 
 void test_saida_exemplo_especificacao() {
@@ -125,18 +127,18 @@ void test_saida_exemplo_especificacao() {
 
     Despachante d;
     d.carregar_arquivos("/tmp/proc.txt", "/tmp/str.txt");
-    std::string out = capturar_saida([&]{ d.executar(); });
+    string out = capturar_saida([&]{ d.executar(); });
 
     // P0 deve aparecer antes de P1 (tempo_chegada 2 < 8)
-    ASSERT_TRUE(out.find("P0 STARTED") != std::string::npos);
-    ASSERT_TRUE(out.find("P1 STARTED") != std::string::npos);
+    ASSERT_TRUE(out.find("P0 STARTED") != string::npos);
+    ASSERT_TRUE(out.find("P1 STARTED") != string::npos);
     ASSERT_TRUE(out.find("P0 STARTED") < out.find("P1 STARTED"));
 
     // P0 tem 3 instruções, P1 tem 2
-    ASSERT_TRUE(out.find("P0 instruction 3") != std::string::npos);
-    ASSERT_TRUE(out.find("P1 instruction 2") != std::string::npos);
-    ASSERT_TRUE(out.find("P0 instruction 4") == std::string::npos);
-    ASSERT_TRUE(out.find("P1 instruction 3") == std::string::npos);
+    ASSERT_TRUE(out.find("P0 instruction 3") != string::npos);
+    ASSERT_TRUE(out.find("P1 instruction 2") != string::npos);
+    ASSERT_TRUE(out.find("P0 instruction 4") == string::npos);
+    ASSERT_TRUE(out.find("P1 instruction 3") == string::npos);
 }
 
 // --- Escalonamento ---
@@ -150,7 +152,7 @@ void test_tempo_real_executa_antes_de_usuario() {
 
     Despachante d;
     d.carregar_arquivos("/tmp/proc.txt", "/tmp/str.txt");
-    std::string out = capturar_saida([&]{ d.executar(); });
+    string out = capturar_saida([&]{ d.executar(); });
 
     ASSERT_TRUE(out.find("P0 STARTED") < out.find("P1 STARTED"));
 }
@@ -162,13 +164,13 @@ void test_preempcao_processo_de_usuario() {
 
     Despachante d;
     d.carregar_arquivos("/tmp/proc.txt", "/tmp/str.txt");
-    std::string out = capturar_saida([&]{ d.executar(); });
+    string out = capturar_saida([&]{ d.executar(); });
 
     // Todas as 3 instruções devem aparecer (mesmo com preempções)
-    ASSERT_TRUE(out.find("P0 instruction 1") != std::string::npos);
-    ASSERT_TRUE(out.find("P0 instruction 2") != std::string::npos);
-    ASSERT_TRUE(out.find("P0 instruction 3") != std::string::npos);
-    ASSERT_TRUE(out.find("P0 return SIGINT") != std::string::npos);
+    ASSERT_TRUE(out.find("P0 instruction 1") != string::npos);
+    ASSERT_TRUE(out.find("P0 instruction 2") != string::npos);
+    ASSERT_TRUE(out.find("P0 instruction 3") != string::npos);
+    ASSERT_TRUE(out.find("P0 return SIGINT") != string::npos);
 }
 
 void test_tempo_de_chegada_respeitado() {
@@ -180,7 +182,7 @@ void test_tempo_de_chegada_respeitado() {
 
     Despachante d;
     d.carregar_arquivos("/tmp/proc.txt", "/tmp/str.txt");
-    std::string out = capturar_saida([&]{ d.executar(); });
+    string out = capturar_saida([&]{ d.executar(); });
 
     // P0 deve terminar antes de P1 começar
     size_t p0_fim    = out.find("P0 return SIGINT");
@@ -192,7 +194,7 @@ void test_tempo_de_chegada_respeitado() {
 // main
 // ============================================================
 int main() {
-    std::cout << "=== Testes: Despachante ===\n";
+    cout << "=== Testes: Despachante ===\n";
 
     RUN_TEST("carregar_arquivos le dois processos",          test_carregar_le_dois_processos);
     RUN_TEST("carregar_arquivos associa paginas",            test_carregar_associa_paginas_referenciadas);

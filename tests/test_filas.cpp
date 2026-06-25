@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <iostream>
 
+using namespace std;
+
 static BCP criar_processo(int id, int prioridade, int tempo_cpu = 3) {
     BCP p;
     p.id                           = id;
@@ -123,7 +125,7 @@ void test_remocao_em_fila_vazia_lanca_excecao() {
     GerenciadorDeFilas q;
     bool lancou = false;
     try { q.proximo_processo_da_fila_a_ser_executado(); }
-    catch (const std::underflow_error&) { lancou = true; }
+    catch (const underflow_error&) { lancou = true; }
     ASSERT_TRUE(lancou);
 }
 
@@ -135,7 +137,7 @@ void test_estouro_lanca_excecao() {
             BCP p = criar_processo(i, 1);
             q.adicionar_processos_na_fila(p);
         }
-    } catch (const std::overflow_error&) {
+    } catch (const overflow_error&) {
         lancou = true;
     }
     ASSERT_TRUE(lancou);
@@ -251,7 +253,7 @@ void test_envelhecimento_multiplos_processos() {
 // main
 // ============================================================
 int main() {
-    std::cout << "=== Testes: Módulo de Filas ===\n";
+    cout << "=== Testes: Módulo de Filas ===\n";
 
     RUN_TEST("inserir tempo real",                        test_inserir_tempo_real);
     RUN_TEST("inserir filas de usuario",                  test_inserir_filas_usuario);
