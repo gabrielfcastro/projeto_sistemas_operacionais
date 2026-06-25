@@ -10,8 +10,8 @@ TARGET = dispatcher
 TEST_PROCESSO       = $(BUILD_DIR)/test_processo
 TEST_FILAS          = $(BUILD_DIR)/test_filas
 TEST_DESPACHANTE    = $(BUILD_DIR)/test_despachante
+TEST_MEMORIA         = $(BUILD_DIR)/test_memoria
 
-TEST_MEMORY         = $(BUILD_DIR)/test_memory
 TEST_RESOURCE       = $(BUILD_DIR)/test_resource
 TEST_FILES          = $(BUILD_DIR)/test_files
 
@@ -34,7 +34,7 @@ $(TEST_FILAS): $(TEST_DIR)/test_filas.cpp $(SRC_DIR)/filas.hpp $(SRC_DIR)/proces
 $(TEST_DESPACHANTE): $(TEST_DIR)/test_despachante.cpp $(SRC_DIR)/despachante.hpp $(SRC_DIR)/filas.hpp $(SRC_DIR)/processo.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-$(TEST_MEMORY): $(TEST_DIR)/test_memory.cpp $(SRC_DIR)/memory.hpp $(SRC_DIR)/processo.hpp | $(BUILD_DIR)
+$(TEST_MEMORIA): $(TEST_DIR)/test_memoria.cpp $(SRC_DIR)/memoria.hpp $(SRC_DIR)/processo.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 $(TEST_RESOURCE): $(TEST_DIR)/test_resource.cpp $(SRC_DIR)/resource.hpp $(SRC_DIR)/processo.hpp | $(BUILD_DIR)
@@ -55,9 +55,9 @@ test_despachante: $(TEST_DESPACHANTE)
 	@echo "\n>>> Rodando testes: Módulo do Despachante"
 	@./$(TEST_DESPACHANTE)
 
-test_memoria: $(TEST_MEMORY)
+test_memoria: $(TEST_MEMORIA)
 	@echo "\n>>> Rodando testes: Módulo de Memória"
-	@./$(TEST_MEMORY)
+	@./$(TEST_MEMORIA)
 
 test_resource: $(TEST_RESOURCE)
 	@echo "\n>>> Rodando testes: Módulo de Recursos"
