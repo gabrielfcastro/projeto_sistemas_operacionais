@@ -67,7 +67,7 @@ test_arquivos: $(TEST_FILES)
 	@echo "\n>>> Rodando testes: Módulo de Arquivos"
 	@./$(TEST_FILES)
 
-test: test_processo test_filas test_despachante
+test: test_processo test_filas test_resource test_arquivos
 	@echo "\nTodos os testes concluídos."
 
 clean:
