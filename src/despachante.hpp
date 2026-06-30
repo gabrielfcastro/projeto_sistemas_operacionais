@@ -57,7 +57,10 @@ class Despachante {
 
                 garantir_memoria_inicializada(processo_atual);
 
-                imprimir_cabecalho_do_despachante(processo_atual);
+                if (!processos_ja_impressos.count(processo_atual.id)){
+                    imprimir_cabecalho_do_despachante(processo_atual);
+                }
+
                 executar_processo(processo_atual, tempo_atual);
                 tempo_atual++;
             }
@@ -79,6 +82,7 @@ class Despachante {
         int proximo_processo_a_entrar_nas_filas = 0;
 
         unordered_set<int> processos_ja_inicializados_na_memoria;
+        unordered_set<int> processos_ja_impressos;
 
         string conteudo_files;
         bool   tem_sistema_de_arquivos = false;
@@ -184,8 +188,13 @@ class Despachante {
         }
 
         void executar_processo(BCP& processo, int& tempo_atual){
-            cout << "process " << processo.id << " =>\n";
-            cout << "P" << processo.id << " STARTED\n";
+
+            // Só imprime a indicação de START se for a primeira vez na CPU
+            if (!processos_ja_impressos.count(processo.id)){
+                cout << "process " << processo.id << " =>\n";
+                cout << "P" << processo.id << " STARTED\n";
+                processos_ja_impressos.insert(processo.id);
+            }
 
             if (processo.tipo == TipoProcesso::TEMPO_REAL){
                 executar_ate_o_fim(processo, tempo_atual);
