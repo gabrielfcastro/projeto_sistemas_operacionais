@@ -20,8 +20,6 @@ static constexpr int QUANTUM = 1;
 
 class Despachante {
     public:
-        // Carrega processes.txt + string.txt (obrigatórios).
-        // files.txt é opcional: se vazio, o sistema de arquivos é pulado.
         void carregar_arquivos(const string& arquivo_processos,
                                 const string& arquivo_paginas,
                                 const string& arquivo_files = ""){
@@ -48,17 +46,12 @@ class Despachante {
                 filas.envelhecimento();
                 BCP processo_atual = filas.proximo_processo_da_fila_a_ser_executado();
 
-                // Usuário: só executa se conseguir TODOS os recursos pedidos.
-                // Tudo-ou-nada e não bloqueante (Seção 1.3 da especificação):
-                // se faltar algum recurso, o processo volta para o fim da
-                // fila (sem preempção de quem já está com o recurso) e o SO
-                // segue para o próximo da fila no mesmo instante de tempo.
                 if (processo_atual.tipo == TipoProcesso::USUARIO){
                     ResultadoAlocacao r = recursos.tentar_alocar(processo_atual);
                     if (!r.sucesso){
                         processo_atual.estado_atual = EstadoProcesso::PRONTO;
                         filas.excedido_o_quantum(processo_atual);
-                        continue; // não avança o tempo: tenta o próximo da fila
+                        continue;
                     }
                 }
 
@@ -85,14 +78,8 @@ class Despachante {
         GerenciadorDeRecursos recursos;
         int proximo_processo_a_entrar_nas_filas = 0;
 
-        // Garante que inicializar_processos() na memória só é chamado
-        // UMA VEZ por PID, mesmo que o processo seja preemptado e volte
-        // à fila (executando) várias vezes como cópias de BCP.
         unordered_set<int> processos_ja_inicializados_na_memoria;
 
-        // Conteúdo bruto do files.txt, guardado para processar só no final
-        // (a especificação pede o mapa de disco depois de todos os processos
-        // terem rodado).
         string conteudo_files;
         bool   tem_sistema_de_arquivos = false;
 
@@ -173,17 +160,6 @@ class Despachante {
             }
         }
 
-        // Inicializa o contexto de memória do processo na PRIMEIRA vez que
-        // ele é despachado (independente de quantas vezes for preemptado
-        // depois). A pré-carga da primeira página acontece dentro de
-        // inicializar_processos() e não conta como falta (regra da Seção 1.2).
-        //
-        // IMPORTANTE: conforme o exemplo da Seção 2.1.3 da especificação,
-        // a string de referência de páginas é percorrida INTEGRALMENTE no
-        // momento em que o processo é despachado, independente do tempo de
-        // CPU disponível (no exemplo, P0 tem tempo=3 mas sua string de
-        // referência tem 12 páginas, e mesmo assim todas são processadas).
-        // Por isso a string inteira é executada aqui de uma só vez.
         void garantir_memoria_inicializada(BCP& processo){
             if (processos_ja_inicializados_na_memoria.count(processo.id)){
                 return;
@@ -239,9 +215,6 @@ class Despachante {
             tempo_atual++;
             atualizar_filas_com_novos_processos(tempo_atual);
 
-            // Recursos de E/S não têm preempção (Seção 1.3): o processo
-            // devolve tudo que pegou ao ceder a CPU, seja por ter
-            // terminado, seja por ter estourado o quantum.
             recursos.liberar(processo);
 
             if (processo.tempo_processador_restante <= 0){
@@ -260,16 +233,9 @@ class Despachante {
             sincronizar_estatisticas(processo);
         }
 
-        // O despachante manipula CÓPIAS de BCP (as filas armazenam por
-        // valor). Como o relatório final de faltas de página é gerado a
-        // partir de todos_os_processos (o vetor original), é preciso
-        // copiar de volta o contador acumulado na cópia local sempre que
-        // o processo passa pela CPU — tanto ao terminar quanto a cada
-        // quantum, já que um processo de usuário pode ser preemptado
-        // várias vezes antes de finalizar.
         void sincronizar_estatisticas(const BCP& processo){
             if (processo.id < 0 || processo.id >= (int)todos_os_processos.size()){
-                return; // segurança: nunca deve ocorrer, PIDs são sequenciais
+                return;
             }
             todos_os_processos[processo.id].cont_de_pgs_faltantes =
                 processo.cont_de_pgs_faltantes;
@@ -284,8 +250,6 @@ class Despachante {
             cout << LeitorArquivos::processar(conteudo_files, info);
         }
 
-        // Imprime o relatório final de faltas de página por processo,
-        // no formato exigido pela Seção 2.1.3 da especificação.
         void imprimir_faltas_de_pagina() const{
             cout << "Número de Faltas de Páginas por processo:\n";
             for (const BCP& p : todos_os_processos){
