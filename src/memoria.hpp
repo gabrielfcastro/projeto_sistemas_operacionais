@@ -55,9 +55,8 @@ class GerenciadorDeMemoria{
             ContextoMemoriaProcesso contexto;
             contexto.id_processo = processo.id;
             contexto.limite_de_frames = processo.working_set;
-            contextos[processo.id] = contexto; // CORRIGIDO: contextos
+            contextos[processo.id] = contexto;
 
-            //Pré-carga da primeira página não contabiliza como FALTA DE PÁGINA
             if (!processo.lista_de_paginas_referenciadas.empty()){
                 acessar_pagina(processo, processo.lista_de_paginas_referenciadas[0]);
                 processo.cont_de_pgs_faltantes = 0;
@@ -67,14 +66,12 @@ class GerenciadorDeMemoria{
         bool acessar_pagina(BCP &processo, int pagina){
             auto& contexto = obter_contexto(processo.id);
 
-            // CORRIGIDO: Escopo da função consertado.
-            // HIT: Página já está na memória
+
             if (contexto.tabela_de_paginas.count(pagina)){
                 atualizar_uso_recente_lru(contexto, pagina);
                 return false;
             }
 
-            // PAGE FAULT: Página não encontrada
             processo.cont_de_pgs_faltantes++;
 
             int frame_fisico_alocado = alocar_frame(processo, contexto);
@@ -89,7 +86,6 @@ class GerenciadorDeMemoria{
             return true;
         }
 
-        // CORRIGIDO: Função trazida para dentro do 'public' da classe
         void liberar_memoria_do_processo(int id_processo){
             if (!contextos.count(id_processo)){
                 return;
@@ -98,12 +94,12 @@ class GerenciadorDeMemoria{
             auto& contexto = contextos[id_processo];
             for (auto& par : contexto.tabela_de_paginas){
                 int frame = par.second;
-                frames[frame] = FrameDaMemoria(); // CORRIGIDO: Adicionado parênteses
+                frames[frame] = FrameDaMemoria();
             }
             contextos.erase(id_processo);
         }
 
-    private: // CORRIGIDO: Bloco private retornado para dentro da classe
+    private:
         vector<FrameDaMemoria> frames;
         unordered_map<int, ContextoMemoriaProcesso> contextos;
 

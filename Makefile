@@ -7,68 +7,37 @@ BUILD_DIR = build
 
 TARGET = dispatcher
 
-TEST_PROCESSO       = $(BUILD_DIR)/test_processo
-TEST_FILAS          = $(BUILD_DIR)/test_filas
-TEST_DESPACHANTE    = $(BUILD_DIR)/test_despachante
-TEST_MEMORIA         = $(BUILD_DIR)/test_memoria
+.PHONY: all dispatcher test_integracao clean exemplo
 
-TEST_RESOURCE       = $(BUILD_DIR)/test_resource
-TEST_FILES          = $(BUILD_DIR)/test_files
-
-.PHONY: all test test_processo test_filas test_despachante test_memoria test_resource test_arquivos clean
-
-all: $(TARGET)
-
-$(TARGET): | $(BUILD_DIR)
-	@echo "Aviso: O programa principal (dispatcher) ainda nao foi implementado."
+all: dispatcher
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(TEST_PROCESSO): $(TEST_DIR)/test_processo.cpp $(SRC_DIR)/processo.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $< -o $@
+dispatcher: $(BUILD_DIR)/dispatcher
 
-$(TEST_FILAS): $(TEST_DIR)/test_filas.cpp $(SRC_DIR)/filas.hpp $(SRC_DIR)/processo.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $< -o $@
+$(BUILD_DIR)/dispatcher: $(SRC_DIR)/main.cpp $(SRC_DIR)/despachante.hpp \
+                          $(SRC_DIR)/processo.hpp $(SRC_DIR)/filas.hpp \
+                          $(SRC_DIR)/memoria.hpp $(SRC_DIR)/resource.hpp \
+                          $(SRC_DIR)/filesystem.hpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(SRC_DIR)/main.cpp -o $(BUILD_DIR)/dispatcher
 
-$(TEST_DESPACHANTE): $(TEST_DIR)/test_despachante.cpp $(SRC_DIR)/despachante.hpp $(SRC_DIR)/filas.hpp $(SRC_DIR)/processo.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $< -o $@
+test_integracao: $(BUILD_DIR)/test_integracao
+	@echo "\n>>> Rodando testes de integração"
+	@./$(BUILD_DIR)/test_integracao
 
-$(TEST_MEMORIA): $(TEST_DIR)/test_memoria.cpp $(SRC_DIR)/memoria.hpp $(SRC_DIR)/processo.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $< -o $@
+$(BUILD_DIR)/test_integracao: $(TEST_DIR)/test_integracao.cpp $(SRC_DIR)/despachante.hpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_DIR)/test_integracao.cpp -o $(BUILD_DIR)/test_integracao
 
-$(TEST_RESOURCE): $(TEST_DIR)/test_resource.cpp $(SRC_DIR)/resource.hpp $(SRC_DIR)/processo.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $< -o $@
+exemplo: dispatcher
+	@mkdir -p exemplo
+	@printf '2, 0, 3, 4, 0, 0, 0, 0\n8, 0, 2, 8, 0, 0, 0, 0\n' > exemplo/processes.txt
+	@printf '10\n3\nX, 0, 2\nY, 3, 1\nZ, 5, 3\n0, 0, A, 5\n0, 1, X\n2, 0, B, 2\n0, 0, D, 3\n1, 1, E\n' > exemplo/files.txt
+	@printf '1,2,3,4,1,2,5,1,2,3,4,5\n7,0,1,2,0,3,0,4,2,3,0,3,1,0,2,8,9,10,11,12,9,7,8,3,0,1\n' > exemplo/string.txt
+	./$(BUILD_DIR)/dispatcher exemplo/processes.txt exemplo/files.txt exemplo/string.txt
 
-$(TEST_FILES): $(TEST_DIR)/test_files.cpp $(SRC_DIR)/filesystem.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $< -o $@
-
-test_processo: $(TEST_PROCESSO)
-	@echo "\n>>> Rodando testes: Módulo de processos"
-	@./$(TEST_PROCESSO)
-
-test_filas: $(TEST_FILAS)
-	@echo "\n>>> Rodando testes: Módulo de filas"
-	@./$(TEST_FILAS)
-
-test_despachante: $(TEST_DESPACHANTE)
-	@echo "\n>>> Rodando testes: Módulo do Despachante"
-	@./$(TEST_DESPACHANTE)
-
-test_memoria: $(TEST_MEMORIA)
-	@echo "\n>>> Rodando testes: Módulo de Memória"
-	@./$(TEST_MEMORIA)
-
-test_resource: $(TEST_RESOURCE)
-	@echo "\n>>> Rodando testes: Módulo de Recursos"
-	@./$(TEST_RESOURCE)
-
-test_arquivos: $(TEST_FILES)
-	@echo "\n>>> Rodando testes: Módulo de Arquivos"
-	@./$(TEST_FILES)
-
-test: test_processo test_filas test_resource test_arquivos
-	@echo "\nTodos os testes concluídos."
+run: dispatcher
+	./$(BUILD_DIR)/dispatcher test_sincrono/processes.txt test_sincrono/files.txt test_sincrono/string.txt
 
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET)
+	rm -rf $(BUILD_DIR) exemplo

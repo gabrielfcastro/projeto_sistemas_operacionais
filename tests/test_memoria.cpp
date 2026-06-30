@@ -1,11 +1,7 @@
 #include "test_framework.hpp"
 #include "../src/memoria.hpp"
 
-// ============================================================
-// Testes do Módulo de Memória (memoria.hpp)
-// ============================================================
 
-// Helper: cria BCP mínimo para os testes
 static BCP criar_processo(int id, TipoProcesso tipo, int working_set,
                            vector<int> paginas = {}) {
     BCP p;

@@ -5,11 +5,6 @@
 
 using namespace std;
 
-// ============================================================
-// Testes do Despachante (despachante.hpp)
-// ============================================================
-
-// Helper: escreve um arquivo temporário com o conteúdo dado
 static void escrever_arquivo(const string& caminho, const string& conteudo) {
     ofstream f(caminho);
     f << conteudo;
