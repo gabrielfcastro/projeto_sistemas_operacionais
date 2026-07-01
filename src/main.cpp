@@ -1,11 +1,3 @@
-// main.cpp — Ponto de entrada do pseudo-SO
-//
-// Uso: ./dispatcher processes.txt files.txt string.txt
-//
-// processes.txt — um processo por linha (Seção 2.1.2)
-// files.txt     — configuração do disco + operações de arquivo (Seção 1.4)
-// string.txt    — string de referência de páginas por processo (Seção 1.2)
-
 #include <iostream>
 #include "despachante.hpp"
 

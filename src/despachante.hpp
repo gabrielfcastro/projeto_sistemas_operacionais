@@ -35,6 +35,7 @@ class Despachante {
         void executar(){
             int tempo_atual = 0;
 
+            // O While roda até que todos os processos tenham sido criados ou todas as filas não estejam vazias
             while(proximo_processo_a_entrar_nas_filas < (int)todos_os_processos.size() || !filas.todas_as_filas_estao_vazias()){
 
                 atualizar_filas_com_novos_processos(tempo_atual);
@@ -44,19 +45,23 @@ class Despachante {
                     continue;
                 }
                 filas.envelhecimento();
-                BCP processo_atual = filas.proximo_processo_da_fila_a_ser_executado();
+                BCP processo_atual = filas.proximo_processo_da_fila_a_ser_executado(); // processo_atual = processo com maior prioridade
 
                 if (processo_atual.tipo == TipoProcesso::USUARIO){
                     ResultadoAlocacao r = recursos.tentar_alocar(processo_atual);
+                    // Se os processo estiver com os recursos ocupado, roda outro processo
                     if (!r.sucesso){
+                        // Se não conseguir os recursos de E/S o processo volta para o final da fila
                         processo_atual.estado_atual = EstadoProcesso::PRONTO;
                         filas.excedido_o_quantum(processo_atual);
                         continue;
                     }
                 }
 
+                // Garante que a primeira página esteja na memória e simula o acesso as outras
                 garantir_memoria_inicializada(processo_atual);
 
+                // Verifica se o processo impresso p/ evitar bug de impressão
                 if (!processos_ja_impressos.count(processo_atual.id)){
                     imprimir_cabecalho_do_despachante(processo_atual);
                 }
@@ -65,6 +70,7 @@ class Despachante {
                 tempo_atual++;
             }
 
+            // Verifica se tem um arquivo de disco carregado
             if (tem_sistema_de_arquivos){
                 processar_sistema_de_arquivos();
             }
@@ -100,6 +106,7 @@ class Despachante {
             todos_os_processos = Leitor::filtrar_e_extrair_processos(conteudo);
         }
 
+
         void carregar_paginas_referenciadas(const string& nome_arquivo){
             ifstream arquivo(nome_arquivo);
 
@@ -124,6 +131,7 @@ class Despachante {
             if (!arquivo.is_open()){
                 throw runtime_error("Não foi possível abrir: " + nome_arquivo);
             }
+            // Joga todo o conteudo bruto do arquivo do disco p/ dentro da variável string da classe
             conteudo_files.assign((istreambuf_iterator<char>(arquivo)),
                                    istreambuf_iterator<char>());
             tem_sistema_de_arquivos = true;
@@ -147,6 +155,7 @@ class Despachante {
             return paginas;
         }
 
+        // Verifica se tem algum erro nos arquivos
         void validar_processos() const{
             for (int i = 0; i < (int)todos_os_processos.size(); i++){
                 if (todos_os_processos[i].lista_de_paginas_referenciadas.empty()){
@@ -164,12 +173,16 @@ class Despachante {
             }
         }
 
+        // Verifica se já carregou a memória desse processo
         void garantir_memoria_inicializada(BCP& processo){
             if (processos_ja_inicializados_na_memoria.count(processo.id)){
                 return;
             }
-            memoria.inicializar_processos(processo); // pré-carga da página 0
+            // pré-carga da página 0
+            memoria.inicializar_processos(processo);
+            // Começa em 1 pq a página 0 já foi carregada
             for (size_t i = 1; i < processo.lista_de_paginas_referenciadas.size(); i++){
+                // Se a página não estiver na "RAM" contabiliza a falta de página
                 memoria.acessar_pagina(processo, processo.lista_de_paginas_referenciadas[i]);
             }
             processos_ja_inicializados_na_memoria.insert(processo.id);
@@ -239,9 +252,11 @@ class Despachante {
             processo.estado_atual = EstadoProcesso::FINALIZADO;
             cout<< "P" << processo.id << " return SIGINT\n\n";
             memoria.liberar_memoria_do_processo(processo.id);
+            // Salva os dados (falta de páginas) na lista globa do SO
             sincronizar_estatisticas(processo);
         }
 
+        // Copia os contadores do obj que estava nas filas p/ que o obj fique na lista principal do SO
         void sincronizar_estatisticas(const BCP& processo){
             if (processo.id < 0 || processo.id >= (int)todos_os_processos.size()){
                 return;
@@ -251,9 +266,12 @@ class Despachante {
         }
 
         void processar_sistema_de_arquivos(){
+            // Variável auxiliar do modulo de arquivo  p/ saber o contexto
             InfoProcessos info;
             info.eh_tempo_real.reserve(todos_os_processos.size());
+            // Percorre todos os processos finalizados
             for (const BCP& p : todos_os_processos){
+                // Preenche cada PID dizendo se é Tempo Real (True) ou Usuário (False)
                 info.eh_tempo_real.push_back(p.tipo == TipoProcesso::TEMPO_REAL);
             }
             cout << LeitorArquivos::processar(conteudo_files, info);

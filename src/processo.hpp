@@ -133,7 +133,7 @@ namespace Leitor {
             lista_de_processos.push_back(ler_linha(linha_atual, id_sequencial++));
         }
 
-        return lista_de_processos; // Corrigido com ponto e vírgula
+        return lista_de_processos;
     }
 }
 

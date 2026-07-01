@@ -21,6 +21,7 @@ struct FrameDaMemoria{
     int id_processo;
     int pagina_logica;
 
+    // Todo frame nasce livre e sem "dono"
     FrameDaMemoria() : ocupado(false), id_processo(-1), pagina_logica(-1) {}
 };
 
@@ -36,7 +37,7 @@ struct ContextoMemoriaProcesso{
 class GerenciadorDeMemoria{
     public:
         GerenciadorDeMemoria(){
-            frames.resize(TOTAL_DE_FRAMES);
+            frames.resize(TOTAL_DE_FRAMES); // Constroi a memória com 20 frames
         }
 
         void inicializar_processos(BCP& processo){
@@ -44,19 +45,21 @@ class GerenciadorDeMemoria{
                 throw runtime_error("Processo P" + to_string(processo.id) + " já foi inicializado na memória.");
             }
 
+            // Se pedir mais frames do que o total
             if (processo.tipo == TipoProcesso::TEMPO_REAL && processo.working_set > FRAMES_TEMPO_REAL){
                 throw runtime_error("Processo TR P" + to_string(processo.id) + " pede mais frames do que a partição suporta.");
             }
-            // Retornei a trava de segurança para processos de usuário também
             if (processo.tipo == TipoProcesso::USUARIO && processo.working_set > FRAMES_USUARIO){
                 throw runtime_error("Processo de Usuário P" + to_string(processo.id) + " pede mais frames do que a partição suporta.");
             }
 
+            // Cria uma tabela de páginas virtuais p/ cada processo
             ContextoMemoriaProcesso contexto;
             contexto.id_processo = processo.id;
             contexto.limite_de_frames = processo.working_set;
             contextos[processo.id] = contexto;
 
+            // Não contabiliza a primeira página
             if (!processo.lista_de_paginas_referenciadas.empty()){
                 acessar_pagina(processo, processo.lista_de_paginas_referenciadas[0]);
                 processo.cont_de_pgs_faltantes = 0;
@@ -66,7 +69,7 @@ class GerenciadorDeMemoria{
         bool acessar_pagina(BCP &processo, int pagina){
             auto& contexto = obter_contexto(processo.id);
 
-
+            // Verifica se a página solicitada está na tabela de páginas
             if (contexto.tabela_de_paginas.count(pagina)){
                 atualizar_uso_recente_lru(contexto, pagina);
                 return false;
@@ -74,11 +77,14 @@ class GerenciadorDeMemoria{
 
             processo.cont_de_pgs_faltantes++;
 
+            // Aloca na RAM a página
             int frame_fisico_alocado = alocar_frame(processo, contexto);
 
             contexto.tabela_de_paginas[pagina] = frame_fisico_alocado;
+            // Coloca essa página no topo do ranking do LRU
             contexto.ordem_lru.push_front(pagina);
 
+            // Atualiza a RAM
             frames[frame_fisico_alocado].ocupado = true;
             frames[frame_fisico_alocado].id_processo = processo.id;
             frames[frame_fisico_alocado].pagina_logica = pagina;
@@ -91,11 +97,13 @@ class GerenciadorDeMemoria{
                 return;
             }
 
+            // Varre a tabela do processo "morto"
             auto& contexto = contextos[id_processo];
             for (auto& par : contexto.tabela_de_paginas){
                 int frame = par.second;
-                frames[frame] = FrameDaMemoria();
+                frames[frame] = FrameDaMemoria(); // Zera o dono, desmarca ocupado...
             }
+            // Apaga a tabela lógica do processo encerrado
             contextos.erase(id_processo);
         }
 
@@ -125,6 +133,7 @@ class GerenciadorDeMemoria{
             int frame_inicial, limite_de_frames;
             definir_limites_da_particao(processo, frame_inicial, limite_de_frames);
 
+            // O processo ainda não estourou o Working Set
             if ((int)contexto.tabela_de_paginas.size() < contexto.limite_de_frames){
                 for (int i = frame_inicial; i < limite_de_frames; i++) {
                     if (!frames[i].ocupado){
@@ -132,7 +141,7 @@ class GerenciadorDeMemoria{
                     }
                 }
             }
-
+            // O processo bateu o limite do Working Set ou a partição lotou
             return evocar_lru_e_liberar_frame(processo, contexto);
         }
 

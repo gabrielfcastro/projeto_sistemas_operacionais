@@ -7,7 +7,15 @@ BUILD_DIR = build
 
 TARGET = dispatcher
 
-.PHONY: all dispatcher test_integracao clean exemplo
+TESTS_BIN = $(BUILD_DIR)/test_despachante \
+            $(BUILD_DIR)/test_filas \
+            $(BUILD_DIR)/test_files \
+            $(BUILD_DIR)/test_integracao \
+            $(BUILD_DIR)/test_memoria \
+            $(BUILD_DIR)/test_processo \
+            $(BUILD_DIR)/test_resource
+
+.PHONY: all dispatcher test test_integracao clean exemplo run
 
 all: dispatcher
 
@@ -22,12 +30,23 @@ $(BUILD_DIR)/dispatcher: $(SRC_DIR)/main.cpp $(SRC_DIR)/despachante.hpp \
                           $(SRC_DIR)/filesystem.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(SRC_DIR)/main.cpp -o $(BUILD_DIR)/dispatcher
 
+$(BUILD_DIR)/test_%: $(TEST_DIR)/test_%.cpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+test: $(TESTS_BIN)
+	@echo "\n========================================"
+	@echo " Executando Suíte Completa de Testes"
+	@echo "========================================\n"
+	@for t in $(TESTS_BIN); do \
+		echo ">>> Rodando $$t"; \
+		./$$t; \
+		echo "----------------------------------------"; \
+	done
+	@echo "Todos os testes foram executados!\n"
+
 test_integracao: $(BUILD_DIR)/test_integracao
 	@echo "\n>>> Rodando testes de integração"
 	@./$(BUILD_DIR)/test_integracao
-
-$(BUILD_DIR)/test_integracao: $(TEST_DIR)/test_integracao.cpp $(SRC_DIR)/despachante.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(TEST_DIR)/test_integracao.cpp -o $(BUILD_DIR)/test_integracao
 
 exemplo: dispatcher
 	@mkdir -p exemplo
