@@ -1,7 +1,5 @@
 # Pseudo-Sistema Operacional (Pseudo-SO)
 
-# Pseudo-Sistema Operacional (Pseudo-SO)
-
 Este projeto consiste na implementação de um **Pseudo-Sistema Operacional** desenvolvido como trabalho prático para a disciplina de **Sistemas Operacionais** da **Universidade de Brasília (UnB)**. O sistema simula o gerenciamento de processos, memória virtual, alocação de recursos e um sistema de arquivos básico.
 
 O projeto foi desenvolvido pelos alunos:
